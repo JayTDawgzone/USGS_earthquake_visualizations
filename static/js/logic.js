@@ -2,96 +2,80 @@ let geoJson = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_wee
 
 
 
-var mymap = L.map('map').setView([41.63, -99.65], 5);
+let mymap = L.map('map').setView([41.63, -99.65], 5);
 
 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
     maxZoom: 10,
-    id: 'mapbox/dark-v10',
+    id: 'mapbox/outdoors-v11',
     accessToken: 'pk.eyJ1IjoidGVycmE5MjUiLCJhIjoiY2s2M3dxODVkMDljODNqbXB5Y25qemk5YyJ9.ifYuDpsCr2sT1xeicJcxgg'
 }).addTo(mymap);
 
 
 
 d3.json(geoJson, function (error, response) {
-
+  features = response.features
+  console.log(features)
   L.geoJson(response, {
 
-    // add circle markers
-    pointToLayer: function (feature, latlng) {
 
-        // magnitude
-        var mag = +feature.properties.mag;
+    pointToLayer: function (feature, coordinates) {
 
-        // circle marker color scale
-        var colorScale = d3.scaleLinear()
+        let mag = +feature.properties.mag;
+
+        let colorScale = d3.scaleLinear()
             .domain([1,8])
-            .range(["lightblue", "red"])
+            .range(["green", "red"])
             .interpolate(d3.interpolateHsl);
 
-        // circle marker options
-        var geojsonMarkerOptions = {
-            radius: mag*5,
+        let geojsonMarkerOptions = {
+            radius: mag*3,
             fillColor: colorScale(mag),
-            color: "#000",
-            weight: 1,
+            color: "#fff",
+            weight: .1,
             opacity: 1,
-            fillOpacity: 0.8
+            fillOpacity: 0.7
         };
 
-        return L.circleMarker(latlng, geojsonMarkerOptions);
-    }
+        return L.circleMarker(coordinates, geojsonMarkerOptions);
+    },
 
-}).addTo(mymap);
-
-  L.geoJson(response, {
-
-    createFeatures: function (feature, layer) {
-
-      var mag = +feature.properties.mag;
-
-
+    onEachFeature: function(feature, coordinates) {
+      let time = new Date(feature.properties.time)
+      let timeString = time.toTimeString()
+      coordinates.bindPopup(`Magnitude: ${feature.properties.mag}<br>Location: ${feature.properties.place}<br> Time: ${timeString}`)
 
     }
 
-  })
+}).addTo(mymap)
 
-
-    // circle marker color scale
-    var colorScale = d3.scaleLinear()
+    let colorScale = d3.scaleLinear()
     .domain([0,8])
     .range(["green", "red"])
     .interpolate(d3.interpolateHsl);
 
-    var legend = L.control({ position: 'bottomright' });
+    let legend = L.control({ position: 'bottomright' });
 
     legend.onAdd = function() {
-      var div = L.DomUtil.create('div', 'info legend');
-      var limits = d3.range(8);
-      // console.log(colors)
-      var labels = []
+      let div = L.DomUtil.create('div', 'info legend');
+      let limits = d3.range(8);
+      let labels = []
 
-      // Add min & max
-      div.innerHTML = `<h1>Earthquake Intensity</h1>
+      div.innerHTML = `<h1>Earthquake Magnitude</h1>
         <div class="labels">
           <div class="min">1</div>
           <div class="max">8+</div>
         </div>`;
 
-      limits.forEach((d,i)=> {
-        labels.push('<li style="background-color: ' + colorScale(i) + '"></li>')
+      limits.forEach((limit,index)=> {
+        labels.push('<li style="background-color: ' + colorScale(index) + '"></li>')
       })
-      // console.log(labels)
 
       div.innerHTML += '<ul>' + labels.join('') + '</ul>';
-      // console.log(div.innerHTML)
       return div
     };
 
 legend.addTo(mymap);
-
-
-
 
 
 });
