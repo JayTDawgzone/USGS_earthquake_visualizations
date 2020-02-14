@@ -1,7 +1,7 @@
 # USGS_earthquake_visualizations
 
 
-
+[Earthquake Map](https://jaytdawgzone.github.io/USGS_earthquake_visualizations/)
 
 
 ### Summary:
